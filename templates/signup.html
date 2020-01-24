@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <title>Register</title>
+    <link href="{% static 'css/signup.css' %}" rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="{% static 'js/signup.js' %}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+</head>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        console.log("Page loaded");
+        let login_form = $('#js-login-form');
+        let signup_form = $('#js-signup-form');
+        let signup_uname_field = $('#js-signup-username');
+        let signup_uname_validation = $('#js-signup-username-validation');
+        let signup_email_field = $('#js-signup-email');
+        let signup_password_field = $('#js-signup-password');
+        let signup_con_pass_field = $('#js-signup-confirm-password');
+        let signup_con_pass_validation = $('#js-signup-con-pass-validation');
+        let signup_button = $('#js-signup-button');
+        let login_validation_field = $('#js-login-validation');
+
+        {#   Hide confirm password field#}
+        signup_con_pass_field.hide(0);
+
+        {#   Clear confirm-password-validation field#}
+        signup_con_pass_field.keyup(function () {
+           signup_con_pass_validation.html('');
+        });
+
+        {#   Show confirm password field#}
+        signup_password_field.keyup(function () {
+           let val = $(this).val();
+           let n = 0;
+           if(val === ''){
+               signup_con_pass_field.hide(400);
+           }
+           if(val !== '' && n === 0){           {# only runs when n = 0, so it does not run with every keyup trigger #}
+               signup_con_pass_field.show(400);
+               n = 1;
+            }
+        });
+
+
+        {#       username validation              #}
+
+        signup_uname_field.keyup(function () {
+            signup_uname_validation.html('');
+            console.log("Key pressed uname");
+            let username = $(this).val();
+            if (username !== ''){
+                let form = signup_uname_field.closest('form');
+                $.ajax({
+                    url: '{% url 'gym_website_app:validate_uname' %}',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function (data) {
+                        if(data.is_taken){
+                            signup_uname_validation.html(username+" "+data.message);
+                            signup_uname_validation.css('color', 'red');
+                            signup_button.hide(500);
+
+                        }
+                        else{
+                            signup_uname_validation.html(username+" is "+data.message);
+                            signup_uname_validation.css('color', 'green');
+                            signup_button.show(400);
+                        }
+                    }
+                })
+            }
+        });
+
+        {#         Signup Form Validation   #}
+
+        signup_form.submit(function (e) {
+            e.preventDefault();
+            let username = signup_uname_field.val();
+            let password = signup_password_field.val();
+            if(username !== '' && password !== ''){
+                if (signup_password_field.val() === signup_con_pass_field.val()){    {# ao form does not gets submitted empty #}
+                    $.ajax({
+                        url: '{% url 'gym_website_app:signup & login' %}',
+                        type: 'POST',
+                        data: {
+                            csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").attr('value'),
+                            username: username,
+                            password: password,
+                            email: signup_email_field.val(),
+                            submit: 'signup',
+                                },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data.user_created){
+                                {#signup_form.find("input[type=text], textarea").val('');#}
+                                {#signup_con_pass_validation.css('color', 'green');#}
+                                {#signup_con_pass_validation.html("User created successfully!");#}
+                                window.location.href = '{% url 'gym_website_app:signup & login' %}'
+                            }
+                            else {
+                                signup_con_pass_validation.css('color', 'red');
+                                signup_con_pass_validation.html("User creation failed! Try again!");
+                            }
+                        }
+                    })
+                }
+                else {
+
+                    signup_con_pass_validation.css('color', 'red');
+                    signup_con_pass_validation.html("Passwords do not match");
+                }
+             }
+            else{
+                signup_con_pass_validation.css('color', 'red');
+                    signup_con_pass_validation.html("Username/password field is empty!");
+             }
+         });
+
+
+        {#       LOGIN VALIDATION FORM   #}
+
+        login_form.submit(function (e) {
+            e.preventDefault();
+            let username = $('#js-login-username').val();
+            let password = $('#js-login-password').val();
+            let next = $('#js-login-next').val()
+            if(username !== '' && password!== ''){                    {# so form doen not gets submitted empty #}
+                $.ajax({
+                    url: '{% url 'gym_website_app:signup & login' %}',
+                    data: {
+                        username: username,
+                        password: password,
+                        next: next,
+                        csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").attr('value'),
+                        submit: 'login',
+                    },
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function (data) {
+                        if(data.logged_in){
+                            if (data.next_url){
+                                console.log(data.next_url);
+                                console.log(data.next_url.toString());
+                                window.location.href = data.next_url
+                            }
+                            else{
+                                window.location.href = "{% url 'blog_app:blog_index' %}"
+                            }
+                        }
+                        else {
+                            login_validation_field.html("username/password is invalid!");
+
+                            {#   Error message would disappear when form is clicked#}
+                            login_form.click(function () {
+                                login_validation_field.html('')
+                            })
+                        }
+                    }
+                })
+            }
+            else{
+                login_validation_field.html("The fields can not be empty!")
+            }
+        })
+    })
+</script>
+
+<body>
+
+    {#    popping up messages        #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert text-center alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+    <div id="box" style=" background-color:transparent;">
+
+        <div id="main"></div>
+
+        <div id="loginform">
+            <h1>LOGIN</h1>
+            <form id="js-login-form" action="{% url 'gym_website_app:signup & login' %}" method="post">
+                {% csrf_token %}
+                <input id="js-login-username" type="text" placeholder="Username" name="username" value="" /><br>
+                <input id="js-login-password" type="password" placeholder="Password" name="password" value="" /><br>
+                <input id="js-login-next" type="hidden" name="next" value="{{ request.GET.next }}"/>
+                <p id="js-login-validation" style="color: red;font-size: 75%"></p>
+                <button id="js-login-button" type="submit" name="submit" value="login">LOGIN</button>
+            </form>
+        </div>
+
+        <div id="signupform">
+            <h1>SIGN UP</h1>
+            <form id="js-signup-form" action="{% url 'gym_website_app:signup & login' %}" method="post">
+                {% csrf_token %}
+                <input type="text" id="js-signup-username" placeholder="Full Name" name="username" value=""/><br>
+                <p id="js-signup-username-validation" style="font-size:70%; font-family: 'Noto Sans Old Italic',serif"></p>
+                <input type="email" id="js-signup-email" placeholder="Email" name="email" value=""/><br>
+                <input type="password" id='js-signup-password' placeholder="Password" name="password" value=""/><br>
+                <input type="password" id="js-signup-confirm-password" placeholder="Confirm Password"/><br>
+                <p id="js-signup-con-pass-validation" style="font-size: 70%;font-family: 'Noto Sans Old Italic',serif;color: #8b1523"></p>
+                <button id="js-signup-button" type="submit" name="submit" value="signup">SIGN UP</button>
+            </form>
+        </div>
+
+        <div id="login_msg">Have an account?</div>
+        <div id="signup_msg">Don't have an account?</div>
+
+        <button id="login_btn">LOGIN</button>
+        <button id="signup_btn">SIGN UP</button>
+
+
+    </div>
+</body>
+</html>
