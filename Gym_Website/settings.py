@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,14 +22,11 @@ MEDIA_DIR = os.path.join(BASE_DIR, 'media')
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = '1238#ghy^%62373923gdysd%&@&*gsd23s23dff4sds23hsdy^@Hsdy^sd3^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = (os.environ.get("DEBUG_VALUE") == 'True')
-
-ALLOWED_HOSTS = [
-    'alif-gym.herokuapp.com',
-]
+DEBUG = True
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -146,5 +142,3 @@ LOGIN_URL = '/login/'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-
-django_heroku.settings(locals())
