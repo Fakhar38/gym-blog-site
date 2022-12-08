@@ -2,7 +2,7 @@ argon2-cffi==19.2.0
 automium==0.2.6
 bcrypt==3.1.7
 bootstrap4==0.1.0
-certifi==2019.9.11
+certifi==2022.12.7
 cffi==1.13.2
 Click==7.0
 dj-database-url==0.5.0
